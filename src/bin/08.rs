@@ -40,7 +40,7 @@ fn convert_input_to_grid(input: &str) -> Vec<Vec<char>> {
 }
 
 fn get_site_locations(
-    grid: &Vec<Vec<char>>,
+    grid: &[Vec<char>],
     bounds: &(usize, usize),
 ) -> HashMap<char, Vec<(usize, usize)>> {
     let mut locations: HashMap<char, Vec<(usize, usize)>> = HashMap::new();
@@ -112,7 +112,10 @@ fn get_new_location(
 ) -> Option<(usize, usize)> {
     let nl = (l.0 as isize + delta.0, l.1 as isize + delta.1);
 
-    ((0..bounds.0 as isize).contains(&nl.0) && (0..bounds.1 as isize).contains(&nl.1))
+    (
+        (0..bounds.0 as isize).contains(&nl.0)
+        && (0..bounds.1 as isize).contains(&nl.1)
+    )
         .then_some((nl.0 as usize, nl.1 as usize))
 }
 
