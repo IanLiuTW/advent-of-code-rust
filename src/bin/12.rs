@@ -13,7 +13,7 @@ pub fn part_one(input: &str) -> Option<u32> {
     Some(get_fence_cost(
         &mut grid,
         &bounds,
-        compute_cost_and_update_grid,
+        compute_cost,
     ))
 }
 
@@ -24,7 +24,7 @@ pub fn part_two(input: &str) -> Option<u32> {
     Some(get_fence_cost(
         &mut grid,
         &bounds,
-        compute_cost_and_update_grid2,
+        compute_cost2,
     ))
 }
 
@@ -35,12 +35,12 @@ fn convert_input_to_grid(input: &str) -> Vec<Vec<char>> {
 fn get_fence_cost<F>(
     grid: &mut Vec<Vec<char>>,
     bounds: &(usize, usize),
-    compute_cost_and_update_grid: F,
+    compute_cost: F,
 ) -> u32
 where
-    F: Fn(&mut Vec<Vec<char>>, &(usize, usize), HashSet<(usize, usize)>) -> u32,
+    F: Fn(&mut Vec<Vec<char>>, &(usize, usize), &HashSet<(usize, usize)>) -> u32,
 {
-    let mut cost = 0;
+    let mut total_cost = 0;
 
     for pos in (0..bounds.0).cartesian_product(0..bounds.1) {
         if grid[pos.0][pos.1] == ' ' {
@@ -50,10 +50,11 @@ where
         let mut visited: HashSet<(usize, usize)> = HashSet::new();
         dfs(&pos, grid, bounds, &mut visited);
 
-        cost += compute_cost_and_update_grid(grid, bounds, visited);
+        total_cost += compute_cost(grid, bounds, &visited);
+        mark_visited_on_grid(grid, visited);
     }
 
-    cost
+    total_cost
 }
 
 fn dfs(
@@ -62,7 +63,7 @@ fn dfs(
     bounds: &(usize, usize),
     visited: &mut HashSet<(usize, usize)>,
 ) {
-    if visited.contains(&pos) {
+    if visited.contains(pos) {
         return;
     }
     visited.insert(*pos);
@@ -77,14 +78,20 @@ fn dfs(
     }
 }
 
-fn compute_cost_and_update_grid(
+fn mark_visited_on_grid(grid: &mut [Vec<char>], visited: HashSet<(usize, usize)>) {
+    for pos in &visited {
+        grid[pos.0][pos.1] = ' ';
+    }
+}
+
+fn compute_cost(
     grid: &mut Vec<Vec<char>>,
     bounds: &(usize, usize),
-    visited: HashSet<(usize, usize)>,
+    visited: &HashSet<(usize, usize)>,
 ) -> u32 {
     let mut perimeter = 0;
 
-    for pos in &visited {
+    for pos in visited {
         for delta in DIRECTIONS {
             if let Some(next_pos) = is_valid_pos(pos, bounds, &delta) {
                 if grid[next_pos.0][next_pos.1] != grid[pos.0][pos.1] {
@@ -96,20 +103,16 @@ fn compute_cost_and_update_grid(
         }
     }
 
-    for pos in &visited {
-        grid[pos.0][pos.1] = ' ';
-    }
-
     visited.len() as u32 * perimeter
 }
 
-fn compute_cost_and_update_grid2(
+fn compute_cost2(
     grid: &mut Vec<Vec<char>>,
     bounds: &(usize, usize),
-    visited: HashSet<(usize, usize)>,
+    visited: &HashSet<(usize, usize)>,
 ) -> u32 {
     let mut borders: HashMap<(isize, isize), Vec<(usize, usize)>> = HashMap::new();
-    for pos in &visited {
+    for pos in visited {
         for delta in DIRECTIONS {
             if let Some(next_pos) = is_valid_pos(pos, bounds, &delta) {
                 if grid[next_pos.0][next_pos.1] != grid[pos.0][pos.1] {
@@ -144,10 +147,6 @@ fn compute_cost_and_update_grid2(
                 sides += segments;
             }
         }
-    }
-
-    for pos in &visited {
-        grid[pos.0][pos.1] = ' ';
     }
 
     sides * visited.len() as u32
