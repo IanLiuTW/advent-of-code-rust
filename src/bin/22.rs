@@ -2,11 +2,11 @@ use std::collections::{HashMap, VecDeque};
 
 advent_of_code::solution!(22);
 
-pub fn part_one(input: &str) -> Option<u64> {
+pub fn part_one(input: &str) -> Option<u32> {
     let mut ans = 0;
 
     for line in input.lines() {
-        let secret = line.parse::<u64>().unwrap();
+        let secret = line.parse::<u32>().unwrap();
         let mut secret = Secret::new(secret);
 
         for _ in 0..2000 {
@@ -23,7 +23,7 @@ pub fn part_two(input: &str) -> Option<u32> {
     let mut total_selling_mapping: HashMap<(i8, i8, i8, i8), u32> = HashMap::new();
 
     for line in input.lines() {
-        let secret = line.parse::<u64>().unwrap();
+        let secret = line.parse::<u32>().unwrap();
         let secret = Secret::new(secret);
 
         let selling_mapping = get_selling_mapping(secret);
@@ -65,11 +65,11 @@ fn get_selling_mapping(mut secret: Secret) -> HashMap<(i8, i8, i8, i8), u32> {
 
 #[derive(Clone, Copy)]
 struct Secret {
-    secret: u64,
+    secret: u32,
 }
 
 impl Secret {
-    fn new(secret: u64) -> Self {
+    fn new(secret: u32) -> Self {
         Secret { secret }
     }
 
@@ -88,7 +88,7 @@ impl Secret {
         self._prune();
     }
 
-    fn _mix(&mut self, val: u64) {
+    fn _mix(&mut self, val: u32) {
         self.secret ^= val
     }
 
