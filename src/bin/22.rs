@@ -2,11 +2,11 @@ use std::collections::{HashMap, VecDeque};
 
 advent_of_code::solution!(22);
 
-pub fn part_one(input: &str) -> Option<u32> {
+pub fn part_one(input: &str) -> Option<u64> {
     let mut ans = 0;
 
     for line in input.lines() {
-        let secret = line.parse::<u32>().unwrap();
+        let secret = line.parse::<u64>().unwrap();
         let mut secret = Secret::new(secret);
 
         for _ in 0..2000 {
@@ -19,11 +19,11 @@ pub fn part_one(input: &str) -> Option<u32> {
     Some(ans)
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    let mut total_selling_mapping: HashMap<(i8, i8, i8, i8), u32> = HashMap::new();
+pub fn part_two(input: &str) -> Option<u64> {
+    let mut total_selling_mapping: HashMap<(i8, i8, i8, i8), u64> = HashMap::new();
 
     for line in input.lines() {
-        let secret = line.parse::<u32>().unwrap();
+        let secret = line.parse::<u64>().unwrap();
         let secret = Secret::new(secret);
 
         let selling_mapping = get_selling_mapping(secret);
@@ -35,8 +35,8 @@ pub fn part_two(input: &str) -> Option<u32> {
     Some(*total_selling_mapping.values().max().unwrap())
 }
 
-fn get_selling_mapping(mut secret: Secret) -> HashMap<(i8, i8, i8, i8), u32> {
-    let mut selling_mapping: HashMap<(i8, i8, i8, i8), u32> = HashMap::new();
+fn get_selling_mapping(mut secret: Secret) -> HashMap<(i8, i8, i8, i8), u64> {
+    let mut selling_mapping: HashMap<(i8, i8, i8, i8), u64> = HashMap::new();
 
     let mut changes = VecDeque::new();
     let mut last_digit = secret.last_digit();
@@ -52,11 +52,7 @@ fn get_selling_mapping(mut secret: Secret) -> HashMap<(i8, i8, i8, i8), u32> {
 
         if changes.len() == 4 {
             let key = (changes[0], changes[1], changes[2], changes[3]);
-            if let std::collections::hash_map::Entry::Vacant(e) = selling_mapping.entry(key) {
-                e.insert(last_digit);
-            } else {
-                continue;
-            }
+            selling_mapping.entry(key).or_insert(last_digit);
         }
     }
 
@@ -65,16 +61,16 @@ fn get_selling_mapping(mut secret: Secret) -> HashMap<(i8, i8, i8, i8), u32> {
 
 #[derive(Clone, Copy)]
 struct Secret {
-    secret: u32,
+    secret: u64,
 }
 
 impl Secret {
-    fn new(secret: u32) -> Self {
+    fn new(secret: u64) -> Self {
         Secret { secret }
     }
 
-    fn last_digit(&self) -> u32 {
-        (self.secret % 10) as u32
+    fn last_digit(&self) -> u64 {
+        (self.secret % 10) as u64
     }
 
     fn go_to_next_secret(&mut self) {
@@ -88,7 +84,7 @@ impl Secret {
         self._prune();
     }
 
-    fn _mix(&mut self, val: u32) {
+    fn _mix(&mut self, val: u64) {
         self.secret ^= val
     }
 
