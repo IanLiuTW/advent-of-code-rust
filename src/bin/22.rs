@@ -70,7 +70,7 @@ impl Secret {
     }
 
     fn last_digit(&self) -> u64 {
-        (self.secret % 10) as u64
+        self.secret % 10
     }
 
     fn go_to_next_secret(&mut self) {
