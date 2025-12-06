@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use std::str::FromStr;
 
 advent_of_code::solution!(6);
