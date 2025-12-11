@@ -257,7 +257,7 @@ impl Manual {
                 }
 
                 // compute dependent variables
-                for (col, eq) in pivots {
+                for (_col, eq) in pivots {
                     let mut val = eq.rhs;
                     for &(fv, c) in &eq.coeff {
                         val -= c * solution[fv];
