@@ -1,35 +1,114 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 advent_of_code::solution!(9);
 
+struct DistanceMatrix {
+    data: Vec<u32>,
+    size: usize,
+}
+
+impl DistanceMatrix {
+    fn new(size: usize) -> Self {
+        Self {
+            data: vec![0; size * size],
+            size,
+        }
+    }
+
+    #[inline(always)]
+    fn get(&self, from: usize, to: usize) -> u32 {
+        self.data[from * self.size + to]
+    }
+
+    #[inline(always)]
+    fn set(&mut self, from: usize, to: usize, dist: u32) {
+        self.data[from * self.size + to] = dist;
+    }
+}
+
 pub fn part_one(input: &str) -> Option<u64> {
-    let graph = parse_input(input);
-
-    let n = graph.len();
-    let mut visited: HashSet<&str> = HashSet::with_capacity(n);
-
-    let result = graph.keys().map(|&city| {}).min();
-
-    None
+    solve(input, |a, b| a.min(b))
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
-    None
+    solve(input, |a, b| a.max(b))
 }
 
-fn parse_input(input: &str) -> HashMap<&str, HashMap<&str, u32>> {
-    let mut graph: HashMap<&str, HashMap<&str, u32>> = HashMap::new();
+fn solve<F>(input: &str, compare: F) -> Option<u64>
+where
+    F: Fn(u32, u32) -> u32 + Copy,
+{
+    let (matrix, n) = parse_input(input);
 
-    for line in input.lines() {
-        let (cities, distance) = line.split_once(" = ").expect("Malformed line");
-        let (city1, city2) = cities.split_once(" to ").expect("Malformed line");
+    (0..n)
+        .filter_map(|start_node| tsp_recursive(&matrix, start_node, 1 << start_node, n, compare))
+        .reduce(compare)
+        .map(|val| val as u64)
+}
 
-        let distance = distance.parse::<u32>().expect("Malformed distance");
-        graph.entry(city1).or_default().insert(city2, distance);
-        graph.entry(city2).or_default().insert(city1, distance);
+fn tsp_recursive<F>(
+    matrix: &DistanceMatrix,
+    current: usize,
+    visited_mask: u32,
+    n: usize,
+    compare: F,
+) -> Option<u32>
+where
+    F: Fn(u32, u32) -> u32 + Copy,
+{
+    if visited_mask.count_ones() as usize == n {
+        return Some(0);
     }
 
-    graph
+    (0..n)
+        .filter(|&next| (visited_mask & (1 << next)) == 0)
+        .filter_map(|next| {
+            let dist = matrix.get(current, next);
+            if dist == 0 {
+                return None;
+            }
+
+            tsp_recursive(matrix, next, visited_mask | (1 << next), n, compare)
+                .map(|rest| dist + rest)
+        })
+        .reduce(compare)
+}
+
+fn parse_input(input: &str) -> (DistanceMatrix, usize) {
+    let mut name_to_id: HashMap<&str, usize> = HashMap::new();
+    let mut next_id = 0;
+
+    let edges: Vec<_> = input
+        .lines()
+        .map(|line| {
+            let (cities, dist_str) = line.split_once(" = ").unwrap();
+            let (c1, c2) = cities.split_once(" to ").unwrap();
+            let dist: u32 = dist_str.parse().unwrap();
+
+            let id1 = *name_to_id.entry(c1).or_insert_with(|| {
+                let i = next_id;
+                next_id += 1;
+                i
+            });
+            let id2 = *name_to_id.entry(c2).or_insert_with(|| {
+                let i = next_id;
+                next_id += 1;
+                i
+            });
+
+            (id1, id2, dist)
+        })
+        .collect();
+
+    let n = name_to_id.len();
+    let mut matrix = DistanceMatrix::new(n);
+
+    for (u, v, d) in edges {
+        matrix.set(u, v, d);
+        matrix.set(v, u, d);
+    }
+
+    (matrix, n)
 }
 
 #[cfg(test)]
@@ -39,12 +118,12 @@ mod tests {
     #[test]
     fn test_part_one() {
         let result = part_one(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(605));
     }
 
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(982));
     }
 }
